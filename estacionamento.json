@@ -1,0 +1,264 @@
+{
+  "clientes": [
+    {
+      "tipo": "mensalista",
+      "nome": "Carlos Rafael Monteiro",
+      "placa": "HNR-9112",
+      "telefone": "11979896473",
+      "valor_mensal": 220.0
+    },
+    {
+      "tipo": "mensalista",
+      "nome": "glaudia",
+      "placa": "GAW3J54",
+      "telefone": "11955556666",
+      "valor_mensal": 200.0
+    },
+    {
+      "tipo": "mensalista",
+      "nome": "nicolly",
+      "placa": "AAA-0000",
+      "telefone": "966665555",
+      "valor_mensal": 200.0
+    }
+  ],
+  "movimentacoes": [
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 10:11:28",
+      "status": "finalizado",
+      "saida": "2026-08-07 10:12:07"
+    },
+    {
+      "placa": "HNR9112",
+      "entrada": "2026-08-07 10:22:35",
+      "status": "finalizado",
+      "saida": "2026-08-07 10:23:09"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 10:23:25",
+      "status": "finalizado",
+      "saida": "2026-08-07 10:23:48"
+    },
+    {
+      "placa": "HNR9112",
+      "entrada": "2026-08-07 10:36:23",
+      "status": "finalizado",
+      "saida": "2026-08-07 10:38:04",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 10:36:43",
+      "status": "finalizado",
+      "saida": "2026-08-07 10:40:17",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 10:56:54",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:01:14",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "DTE-6015",
+      "entrada": "2026-08-07 10:57:25",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:01:42",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 10:57:38",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:02:10",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "GAW3J54",
+      "entrada": "2026-08-07 10:59:10",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:02:36",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "AAA-0000",
+      "entrada": "2026-08-07 11:00:37",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:02:46",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 11:11:06",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:11:41",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 11:11:17",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:12:11",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "dinheiro"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 11:18:04",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:18:41",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 11:18:18",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:19:01",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "GEA9G35",
+      "entrada": "2026-08-07 11:18:29",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:19:13",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "debito"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 11:23:48",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:29:42",
+      "tipo_cliente": "cadastrado",
+      "valor_total": 0.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 11:25:30",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:29:55",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "GEA9G35",
+      "entrada": "2026-08-07 11:25:56",
+      "status": "ativo"
+    },
+    {
+      "placa": "EOE6J63",
+      "entrada": "2026-08-07 11:28:31",
+      "status": "ativo"
+    },
+    {
+      "placa": "EUV-3071",
+      "entrada": "2026-08-07 11:29:25",
+      "status": "ativo"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:33:07",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:40:04",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:34:41",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:40:25",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:36:59",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:40:48",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:39:10",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:41:02",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABV-1234",
+      "entrada": "2026-08-07 11:40:37",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:41:11",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:42:21",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:44:24",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "ABC-1234",
+      "entrada": "2026-08-07 11:43:34",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:44:37",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    },
+    {
+      "placa": "EUI-3344",
+      "entrada": "2026-08-07 11:44:47",
+      "status": "finalizado",
+      "saida": "2026-08-07 11:44:54",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
+    }
+  ],
+  "tarifas": {
+    "carro": 15.0,
+    "moto": 8.0,
+    "caminhao": 25.0
+  },
+  "capacidade": 50
+}
