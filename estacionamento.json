@@ -6,20 +6,6 @@
       "placa": "HNR-9112",
       "telefone": "11979896473",
       "valor_mensal": 220.0
-    },
-    {
-      "tipo": "mensalista",
-      "nome": "glaudia",
-      "placa": "GAW3J54",
-      "telefone": "11955556666",
-      "valor_mensal": 200.0
-    },
-    {
-      "tipo": "mensalista",
-      "nome": "nicolly",
-      "placa": "AAA-0000",
-      "telefone": "966665555",
-      "valor_mensal": 200.0
     }
   ],
   "movimentacoes": [
@@ -170,17 +156,29 @@
     {
       "placa": "GEA9G35",
       "entrada": "2026-08-07 11:25:56",
-      "status": "ativo"
+      "status": "finalizado",
+      "saida": "2026-08-07 12:03:26",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
     },
     {
       "placa": "EOE6J63",
       "entrada": "2026-08-07 11:28:31",
-      "status": "ativo"
+      "status": "finalizado",
+      "saida": "2026-08-07 12:03:34",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
     },
     {
       "placa": "EUV-3071",
       "entrada": "2026-08-07 11:29:25",
-      "status": "ativo"
+      "status": "finalizado",
+      "saida": "2026-08-07 12:03:42",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "pix"
     },
     {
       "placa": "ABC-1234",
