@@ -251,6 +251,20 @@
       "tipo_cliente": "avulso",
       "valor_total": 15.0,
       "forma_pagamento": "pix"
+    },
+    {
+      "placa": "HNR-9112",
+      "entrada": "2026-08-07 19:25:37",
+      "status": "ativo"
+    },
+    {
+      "placa": "COI9I69",
+      "entrada": "2026-08-07 19:25:47",
+      "status": "finalizado",
+      "saida": "2026-08-07 19:27:32",
+      "tipo_cliente": "avulso",
+      "valor_total": 15.0,
+      "forma_pagamento": "credito"
     }
   ],
   "tarifas": {
