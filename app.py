@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, redirect, render_template_string, request, url_for
+from flask import Flask, abort, redirect, render_template_string, request, url_for
 
 from estacionamento import Estacionamento
 
@@ -9,7 +9,6 @@ estacionamento = Estacionamento(storage_type=os.getenv("ESTACIONAMENTO_STORAGE_T
 estacionamento.carregar()
 estacionamento.definir_tarifa("carro", 15.0)
 estacionamento.definir_tarifa("moto", 8.0)
-estacionamento.definir_tarifa("caminhao", 25.0)
 
 HTML = """
 <!doctype html>
@@ -39,7 +38,7 @@ HTML = """
         <div class="card"><strong>Livres:</strong> {{ painel.livres }}</div>
         <div class="card"><strong>Ocupação:</strong> {{ painel.percentual }}%</div>
       </div>
-      <div class="card"><strong>Tarifas:</strong> carro R$15, moto R$8, caminhão R$25</div>
+      <div class="card"><strong>Tarifas:</strong> carro R$15, moto R$8</div>
       <h2>Cadastro</h2>
       <form method="post" action="/cadastrar">
         <input name="tipo" placeholder="tipo" required>
@@ -87,17 +86,21 @@ def cadastrar():
     valor_mensal = request.form.get("valor_mensal")
     codigo_acesso = request.form.get("codigo_acesso")
 
-    estacionamento.cadastrar_cliente(
+    try:
+      estacionamento.cadastrar_cliente(
         tipo=tipo,
         nome=nome,
         placa=placa,
         telefone=telefone,
         valor_mensal=float(valor_mensal) if valor_mensal else None,
         codigo_acesso=codigo_acesso,
-    )
+      )
+    except (TypeError, ValueError) as err:
+      abort(400, description=str(err))
     estacionamento.salvar()
     return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+  debug = os.getenv("FLASK_DEBUG", "0").lower() in {"1", "true", "yes"}
+  app.run(debug=debug)

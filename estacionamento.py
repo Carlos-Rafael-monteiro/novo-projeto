@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
@@ -35,7 +37,7 @@ class Estacionamento:
         storage_type: str = "json",
         storage_path: Optional[str] = None,
         mysql_config: Optional[Dict[str, str]] = None,
-        users: Optional[Dict[str, str]] = None,
+        users: Optional[Dict[str, object]] = None,
         capacidade: Optional[int] = None,
     ) -> None:
         # Lista de clientes cadastrados, como mensalistas, credenciados e avulsos.
@@ -44,7 +46,10 @@ class Estacionamento:
         self.movimentacoes: List[Dict[str, object]] = []
         self.tarifas: Dict[str, float] = {}
         # Capacidade total do estacionamento para o painel de ocupação.
-        self.capacidade: int = capacidade or int(os.getenv("ESTACIONAMENTO_CAPACIDADE", "50"))
+        capacidade_configurada = capacidade if capacidade is not None else int(os.getenv("ESTACIONAMENTO_CAPACIDADE", "50"))
+        if capacidade_configurada <= 0:
+            raise ValueError("A capacidade deve ser maior que zero")
+        self.capacidade: int = capacidade_configurada
         self.storage_type = storage_type.lower()
         # Configurações para persistência em JSON ou MySQL, conforme a escolha do ambiente.
         self.storage_path = storage_path or os.getenv("ESTACIONAMENTO_JSON_PATH", "estacionamento.json")
@@ -54,9 +59,32 @@ class Estacionamento:
             "password": os.getenv("ESTACIONAMENTO_DB_PASSWORD", ""),
             "database": os.getenv("ESTACIONAMENTO_DB_NAME", "estacionamento"),
         }
-        self.users = users or {
+        self.users: Dict[str, object] = users if users is not None else {
             "admin": {"senha": "admin123", "perfil": "administrador"},
             "operador": {"senha": "operador123", "perfil": "operador"},
+        }
+
+    def cadastrar_usuario(self, usuario: str, senha: str, perfil: str) -> Dict[str, str]:
+        """Cadastra um novo usuário com perfil de administrador ou operador."""
+        usuario_normalizado = usuario.strip()
+        senha_normalizada = senha.strip()
+        perfil_normalizado = perfil.strip().lower()
+
+        if not usuario_normalizado or not senha_normalizada:
+            raise ValueError("Usuário e senha são obrigatórios")
+        if perfil_normalizado not in {"administrador", "operador"}:
+            raise ValueError("Perfil de usuário inválido")
+        if usuario_normalizado in self.users:
+            raise ValueError("Já existe um usuário com este nome")
+
+        self.users[usuario_normalizado] = {
+            "senha": senha_normalizada,
+            "perfil": perfil_normalizado,
+        }
+        return {
+            "usuario": usuario_normalizado,
+            "senha": senha_normalizada,
+            "perfil": perfil_normalizado,
         }
 
     def cadastrar_cliente(
@@ -141,6 +169,17 @@ class Estacionamento:
     def registrar_entrada(self, placa: str) -> Dict[str, object]:
         """Cria um novo movimento de entrada com a hora atual."""
         placa_normalizada = self.normalizar_placa(placa)
+        if not placa_normalizada:
+            raise ValueError("Informe uma placa válida")
+        if any(
+            self.normalizar_placa(str(movimento.get("placa", ""))) == placa_normalizada
+            and movimento.get("status") == "ativo"
+            for movimento in self.movimentacoes
+        ):
+            raise ValueError("Já existe uma entrada ativa para esta placa")
+        if len(self.listar_movimentacoes_ativas()) >= self.capacidade:
+            raise ValueError("Não há vagas disponíveis")
+
         movimento = {
             "placa": placa_normalizada,
             "entrada": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -198,8 +237,28 @@ class Estacionamento:
                 "movimentacoes": self.movimentacoes,
                 "tarifas": self.tarifas,
                 "capacidade": self.capacidade,
+                "usuarios": self.users,
             }
-            caminho.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            caminho.parent.mkdir(parents=True, exist_ok=True)
+            arquivo_temporario = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    encoding="utf-8",
+                    dir=caminho.parent,
+                    prefix=f".{caminho.name}.",
+                    suffix=".tmp",
+                    delete=False,
+                ) as arquivo:
+                    arquivo_temporario = Path(arquivo.name)
+                    json.dump(payload, arquivo, ensure_ascii=False, indent=2)
+                    arquivo.flush()
+                    os.fsync(arquivo.fileno())
+                os.replace(arquivo_temporario, caminho)
+                arquivo_temporario = None
+            finally:
+                if arquivo_temporario is not None:
+                    arquivo_temporario.unlink(missing_ok=True)
         elif self.storage_type == "mysql":
             self._salvar_mysql()
         else:
@@ -210,22 +269,45 @@ class Estacionamento:
         if self.storage_type == "json":
             caminho = Path(self.storage_path)
             if caminho.exists():
-                dados = json.loads(caminho.read_text(encoding="utf-8"))
+                try:
+                    dados = json.loads(caminho.read_text(encoding="utf-8"))
+                except json.JSONDecodeError as err:
+                    raise ValueError(f"Arquivo JSON inválido: {err.msg}") from err
                 if isinstance(dados, dict):
-                    self.clientes = dados.get("clientes", [])
-                    self.movimentacoes = dados.get("movimentacoes", [])
-                    self.tarifas = dados.get("tarifas", {})
-                    self.capacidade = int(dados.get("capacidade", self.capacidade))
-                else:
+                    clientes = dados.get("clientes", [])
+                    movimentacoes = dados.get("movimentacoes", [])
+                    tarifas = dados.get("tarifas", {})
+                    capacidade = dados.get("capacidade", self.capacidade)
+                    usuarios = dados.get("usuarios", self.users)
+                    if not isinstance(clientes, list) or not all(isinstance(item, dict) for item in clientes):
+                        raise ValueError("Campo 'clientes' inválido no arquivo JSON")
+                    if not isinstance(movimentacoes, list) or not all(isinstance(item, dict) for item in movimentacoes):
+                        raise ValueError("Campo 'movimentacoes' inválido no arquivo JSON")
+                    if not isinstance(tarifas, dict):
+                        raise ValueError("Campo 'tarifas' inválido no arquivo JSON")
+                    if not isinstance(usuarios, dict):
+                        raise ValueError("Campo 'usuarios' inválido no arquivo JSON")
+                    try:
+                        capacidade = int(capacidade)
+                    except (TypeError, ValueError) as err:
+                        raise ValueError("Campo 'capacidade' inválido no arquivo JSON") from err
+                    if capacidade <= 0:
+                        raise ValueError("A capacidade carregada deve ser maior que zero")
+                    self.clientes = clientes
+                    self.movimentacoes = movimentacoes
+                    self.tarifas = tarifas
+                    self.capacidade = capacidade
+                    self.users = usuarios
+                elif isinstance(dados, list) and all(isinstance(item, dict) for item in dados):
                     self.clientes = dados
                     self.movimentacoes = []
                     self.tarifas = {}
-                    self.capacidade = int(os.getenv("ESTACIONAMENTO_CAPACIDADE", "50"))
+                else:
+                    raise ValueError("Formato inválido no arquivo JSON")
             else:
                 self.clientes = []
                 self.movimentacoes = []
                 self.tarifas = {}
-                self.capacidade = int(os.getenv("ESTACIONAMENTO_CAPACIDADE", "50"))
         elif self.storage_type == "mysql":
             self._carregar_mysql()
         else:
@@ -236,10 +318,13 @@ class Estacionamento:
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python não está instalado")
 
-        conexao = mysql_connector.connect(**self.mysql_config, autocommit=True)
+        banco = self._validar_nome_banco()
+        configuracao_conexao = dict(self.mysql_config)
+        configuracao_conexao.pop("database", None)
+        conexao = mysql_connector.connect(**configuracao_conexao, autocommit=True)
         cursor = conexao.cursor()
-        cursor.execute("CREATE DATABASE IF NOT EXISTS %s" % self.mysql_config["database"])
-        cursor.execute("USE %s" % self.mysql_config["database"])
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{banco}`")
+        cursor.execute(f"USE `{banco}`")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS clientes ("
             "id INT AUTO_INCREMENT PRIMARY KEY, "
@@ -257,7 +342,10 @@ class Estacionamento:
             "placa VARCHAR(20), "
             "entrada VARCHAR(50), "
             "saida VARCHAR(50), "
-            "status VARCHAR(20))"
+            "status VARCHAR(20), "
+            "tipo_cliente VARCHAR(20), "
+            "valor_total DECIMAL(10, 2), "
+            "forma_pagamento VARCHAR(20))"
         )
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS tarifas ("
@@ -293,12 +381,16 @@ class Estacionamento:
 
         for movimento in self.movimentacoes:
             cursor.execute(
-                "INSERT INTO movimentacoes (placa, entrada, saida, status) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO movimentacoes (placa, entrada, saida, status, tipo_cliente, valor_total, forma_pagamento) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 (
                     movimento.get("placa"),
                     movimento.get("entrada"),
                     movimento.get("saida"),
                     movimento.get("status"),
+                    movimento.get("tipo_cliente"),
+                    movimento.get("valor_total"),
+                    movimento.get("forma_pagamento"),
                 ),
             )
 
@@ -321,9 +413,12 @@ class Estacionamento:
         if mysql_connector is None:
             raise RuntimeError("mysql-connector-python não está instalado")
 
-        conexao = mysql_connector.connect(**self.mysql_config)
+        banco = self._validar_nome_banco()
+        configuracao_conexao = dict(self.mysql_config)
+        configuracao_conexao.pop("database", None)
+        conexao = mysql_connector.connect(**configuracao_conexao)
         cursor = conexao.cursor(dictionary=True)
-        cursor.execute("USE %s" % self.mysql_config["database"])
+        cursor.execute(f"USE `{banco}`")
         cursor.execute("SELECT * FROM clientes")
         registros = cursor.fetchall()
 
@@ -353,6 +448,12 @@ class Estacionamento:
                 "saida": registro.get("saida"),
                 "status": registro.get("status"),
             }
+            if registro.get("tipo_cliente") is not None:
+                movimento["tipo_cliente"] = registro["tipo_cliente"]
+            if registro.get("valor_total") is not None:
+                movimento["valor_total"] = float(registro["valor_total"])
+            if registro.get("forma_pagamento") is not None:
+                movimento["forma_pagamento"] = registro["forma_pagamento"]
             self.movimentacoes.append(movimento)
 
         cursor.execute("SELECT * FROM tarifas")
@@ -370,3 +471,10 @@ class Estacionamento:
 
         cursor.close()
         conexao.close()
+
+    def _validar_nome_banco(self) -> str:
+        """Valida o identificador do banco antes de interpolá-lo em SQL."""
+        banco = str(self.mysql_config.get("database", "")).strip()
+        if not re.fullmatch(r"[A-Za-z0-9_]+", banco):
+            raise ValueError("Nome de banco MySQL inválido")
+        return banco

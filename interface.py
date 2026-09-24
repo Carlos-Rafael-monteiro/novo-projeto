@@ -215,7 +215,7 @@ class ControleWindow(tk.Toplevel):
         painel_frame.pack(fill="x", padx=18, pady=(16, 10))
         self.painel_var = tk.StringVar()
         tk.Label(painel_frame, textvariable=self.painel_var, fg="#f8fafc", bg="#111827", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        tk.Label(painel_frame, text="Tarifas: carro R$15, moto R$8, caminhão R$25", fg="#cbd5e1", bg="#111827", font=("Segoe UI", 10)).pack(anchor="w", pady=(4, 0))
+        tk.Label(painel_frame, text="Tarifas: carro R$15, moto R$8", fg="#cbd5e1", bg="#111827", font=("Segoe UI", 10)).pack(anchor="w", pady=(4, 0))
 
         # Área de operação para registrar a entrada e a saída do veículo.
         frame_mov = tk.LabelFrame(self, text="Controle de entrada e saída", bg="#111827", fg="#f8fafc", padx=12, pady=8, font=("Segoe UI", 11, "bold"))
@@ -389,25 +389,58 @@ class ControleWindow(tk.Toplevel):
 
 
 class UsuariosWindow(tk.Toplevel):
-    """Janela simples para listagem de usuários cadastrados."""
+    """Janela administrativa para criação e listagem de usuários."""
 
     def __init__(self, parent: tk.Tk, app: "InterfaceEstacionamento") -> None:
         super().__init__(parent)
         self.app = app
+        self.estacionamento = app.estacionamento
         self.title("Usuários cadastrados")
-        self.geometry("420x320")
+        self.geometry("520x460")
         self.resizable(False, False)
         self.configure(bg="#0f172a")
         self.transient(parent)
 
-        frame = tk.LabelFrame(self, text="Usuários", bg="#111827", fg="#f8fafc", padx=12, pady=12, font=("Segoe UI", 11, "bold"))
-        frame.pack(fill="both", expand=True, padx=18, pady=18)
+        frame_form = tk.LabelFrame(self, text="Novo usuário", bg="#111827", fg="#f8fafc", padx=12, pady=12, font=("Segoe UI", 11, "bold"))
+        frame_form.pack(fill="x", padx=18, pady=(18, 10))
+
+        tk.Label(frame_form, text="Usuário:", fg="#e2e8f0", bg="#111827").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.usuario_var = tk.StringVar()
+        tk.Entry(frame_form, textvariable=self.usuario_var, width=25, bg="#1f2937", fg="#f9fafb", insertbackground="#f9fafb").grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(frame_form, text="Senha:", fg="#e2e8f0", bg="#111827").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.senha_var = tk.StringVar()
+        tk.Entry(frame_form, textvariable=self.senha_var, show="*", width=25, bg="#1f2937", fg="#f9fafb", insertbackground="#f9fafb").grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(frame_form, text="Perfil:", fg="#e2e8f0", bg="#111827").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.perfil_var = tk.StringVar(value="operador")
+        ttk.Combobox(frame_form, textvariable=self.perfil_var, values=["administrador", "operador"], state="readonly", width=22).grid(row=2, column=1, padx=5, pady=5)
+        tk.Button(frame_form, text="Criar usuário", command=self.salvar_usuario, bg="#2563eb", fg="white", bd=0, relief="flat", padx=12, pady=5).grid(row=3, column=0, columnspan=2, pady=8)
+
+        frame = tk.LabelFrame(self, text="Usuários cadastrados", bg="#111827", fg="#f8fafc", padx=12, pady=12, font=("Segoe UI", 11, "bold"))
+        frame.pack(fill="both", expand=True, padx=18, pady=(0, 18))
 
         self.tabela = ttk.Treeview(frame, columns=("usuario", "perfil"), show="headings")
         self.tabela.heading("usuario", text="Usuário")
         self.tabela.heading("perfil", text="Perfil")
         self.tabela.pack(fill="both", expand=True)
         self.atualizar_tabela()
+
+    def salvar_usuario(self) -> None:
+        """Cria um usuário e atualiza a lista após persistir os dados."""
+        try:
+            self.estacionamento.cadastrar_usuario(
+                usuario=self.usuario_var.get(),
+                senha=self.senha_var.get(),
+                perfil=self.perfil_var.get(),
+            )
+            self.estacionamento.salvar()
+            self.usuario_var.set("")
+            self.senha_var.set("")
+            self.atualizar_tabela()
+            messagebox.showinfo("Sucesso", "Usuário criado com sucesso")
+        except ValueError as err:
+            messagebox.showerror("Erro", str(err))
 
     def atualizar_tabela(self) -> None:
         for item in self.tabela.get_children():
@@ -431,7 +464,6 @@ class InterfaceEstacionamento:
         self.estacionamento.carregar()
         self.estacionamento.definir_tarifa("carro", 15.0)
         self.estacionamento.definir_tarifa("moto", 8.0)
-        self.estacionamento.definir_tarifa("caminhao", 25.0)
 
         self.usuario = usuario
         self.perfil = self.estacionamento.obter_perfil_usuario(usuario) or "administrador"
@@ -443,6 +475,14 @@ class InterfaceEstacionamento:
 
     def criar_interface(self) -> None:
         """Monta a tela inicial com navegação para cadastro e controle."""
+        menu_bar = tk.Menu(self.root)
+        menu_sessao = tk.Menu(menu_bar, tearoff=0)
+        menu_sessao.add_command(label="Sair e trocar usuário", command=self.sair_para_login)
+        menu_sessao.add_separator()
+        menu_sessao.add_command(label="Sair do sistema", command=self.root.destroy)
+        menu_bar.add_cascade(label="Sessão", menu=menu_sessao)
+        self.root.configure(menu=menu_bar)
+
         header = tk.Frame(self.root, bg="#111827")
         header.pack(fill="x")
         tk.Label(header, text="Sistema de Estacionamento", fg="#f8fafc", bg="#111827", font=("Segoe UI", 18, "bold")).pack(anchor="w", padx=20, pady=16)
@@ -455,8 +495,6 @@ class InterfaceEstacionamento:
         tk.Button(nav, text="Registro de entrada/saída", command=self.abrir_controle, bg="#10b981", fg="white", bd=0, relief="flat", padx=12, pady=6).pack(side="left", padx=(8, 0))
         if self.perfil == "administrador":
             tk.Button(nav, text="Usuários", command=self.abrir_usuarios, bg="#7c3aed", fg="white", bd=0, relief="flat", padx=12, pady=6).pack(side="left", padx=(8, 0))
-        else:
-            tk.Button(nav, text="Usuários", command=self.abrir_usuarios, bg="#7c3aed", fg="white", bd=0, relief="flat", padx=12, pady=6).pack(side="left", padx=(8, 0))
 
         texto = "Bem-vindo(a)! Utilize o controle de entrada/saída para operar o estacionamento." if self.perfil == "operador" else "Abra uma das janelas para cadastrar clientes ou controlar entradas e saídas."
         tk.Label(self.root, text=texto, fg="#cbd5e1", bg="#0f172a", font=("Segoe UI", 10)).pack(pady=12)
@@ -464,6 +502,17 @@ class InterfaceEstacionamento:
     def alternar_tela_cheia(self) -> None:
         estado = self.root.attributes("-fullscreen")
         self.root.attributes("-fullscreen", not estado)
+
+    def sair_para_login(self) -> None:
+        """Encerra a sessão atual e retorna à tela de autenticação."""
+        for janela in (self.cadastro_window, self.controle_window, self.usuarios_window):
+            if janela is not None and janela.winfo_exists():
+                janela.destroy()
+
+        self.root.configure(menu="")
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        TelaLogin(self.root, lambda usuario, senha: autenticar(usuario, senha, self.root))
 
     def abrir_cadastro(self) -> None:
         """Abre a janela de cadastro de clientes, se ainda não estiver aberta."""
@@ -483,6 +532,9 @@ class InterfaceEstacionamento:
 
     def abrir_usuarios(self) -> None:
         """Abre a janela de usuários cadastrados."""
+        if self.perfil != "administrador":
+            messagebox.showwarning("Acesso negado", "Apenas administradores podem gerenciar usuários")
+            return
         if self.usuarios_window is not None and self.usuarios_window.winfo_exists():
             self.usuarios_window.focus_set()
             return

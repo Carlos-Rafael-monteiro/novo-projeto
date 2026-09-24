@@ -35,6 +35,19 @@ class InterfaceTests(unittest.TestCase):
             if root.winfo_exists():
                 root.destroy()
 
+    def test_menu_permite_voltar_para_o_login(self) -> None:
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            interface = InterfaceEstacionamento(root)
+            interface.sair_para_login()
+
+            self.assertEqual(root.title(), "Login")
+            self.assertTrue(any(isinstance(widget, tk.Entry) for widget in root.winfo_children()[0].winfo_children()))
+        finally:
+            if root.winfo_exists():
+                root.destroy()
+
     def test_confirmar_movimento_registra_entrada_quando_placa_nao_esta_no_patio(self) -> None:
         root = tk.Tk()
         root.withdraw()

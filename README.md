@@ -24,7 +24,7 @@ Este projeto implementa um sistema completo de estacionamento com uma estrutura 
 - Registro de entrada e saída de veículos
 - Versão web para cadastro de clientes
 - Painel com ocupação e vagas livres
-- Tarifas para carro, moto e caminhão
+- Tarifas para carro e moto
 - Persistência em arquivo JSON ou MySQL
 
 ## Estrutura do projeto

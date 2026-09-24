@@ -9,6 +9,25 @@ class NovasFuncionalidadesTests(unittest.TestCase):
         self.assertTrue(estacionamento.autenticar_usuario("admin", "admin123"))
         self.assertFalse(estacionamento.autenticar_usuario("admin", "senhaerrada"))
 
+    def test_cadastrar_usuario_administrador_e_operador(self):
+        estacionamento = Estacionamento()
+
+        administrador = estacionamento.cadastrar_usuario(" gerente ", "senha-gerente", "administrador")
+        operador = estacionamento.cadastrar_usuario(" caixa ", "senha-caixa", "operador")
+
+        self.assertEqual(administrador["usuario"], "gerente")
+        self.assertEqual(operador["perfil"], "operador")
+        self.assertTrue(estacionamento.autenticar_usuario("gerente", "senha-gerente"))
+        self.assertEqual(estacionamento.obter_perfil_usuario("caixa"), "operador")
+
+    def test_nao_permite_usuario_duplicado_ou_perfil_invalido(self):
+        estacionamento = Estacionamento()
+
+        with self.assertRaisesRegex(ValueError, "Já existe"):
+            estacionamento.cadastrar_usuario("admin", "outra-senha", "operador")
+        with self.assertRaisesRegex(ValueError, "Perfil"):
+            estacionamento.cadastrar_usuario("novo", "senha", "visitante")
+
     def test_registrar_entrada_e_saida(self):
         estacionamento = Estacionamento()
         entrada = estacionamento.registrar_entrada("ABC9Z99")
@@ -18,6 +37,22 @@ class NovasFuncionalidadesTests(unittest.TestCase):
         saida = estacionamento.registrar_saida("ABC9Z99")
         self.assertEqual(saida["status"], "finalizado")
         self.assertEqual(len(estacionamento.listar_movimentacoes_ativas()), 0)
+
+    def test_nao_permite_entrada_duplicada(self):
+        estacionamento = Estacionamento()
+        estacionamento.registrar_entrada("ABC9Z99")
+
+        with self.assertRaisesRegex(ValueError, "entrada ativa"):
+            estacionamento.registrar_entrada("ABC-9Z99")
+
+    def test_nao_permite_exceder_capacidade(self):
+        estacionamento = Estacionamento(capacidade=1)
+        estacionamento.registrar_entrada("ABC9Z99")
+
+        with self.assertRaisesRegex(ValueError, "vagas disponíveis"):
+            estacionamento.registrar_entrada("XYZ1A23")
+
+        self.assertEqual(estacionamento.obter_painel_ocupacao()["percentual"], 100.0)
 
     def test_tarifas_por_tipo_de_veiculo(self):
         estacionamento = Estacionamento()

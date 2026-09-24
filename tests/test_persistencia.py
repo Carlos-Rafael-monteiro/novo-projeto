@@ -31,6 +31,29 @@ class PersistenciaTests(unittest.TestCase):
                 dados = json.load(arquivo)
             self.assertEqual(dados["clientes"][0]["nome"], "Maria Silva")
 
+    def test_carregar_rejeita_json_invalido(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            caminho = Path(tmp_dir) / "estacionamento.json"
+            caminho.write_text("{ inválido", encoding="utf-8")
+
+            estacionamento = Estacionamento(storage_path=str(caminho))
+
+            with self.assertRaisesRegex(ValueError, "JSON inválido"):
+                estacionamento.carregar()
+
+    def test_json_persiste_usuarios(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            caminho = Path(tmp_dir) / "estacionamento.json"
+            estacionamento = Estacionamento(storage_path=str(caminho))
+            estacionamento.cadastrar_usuario("caixa", "senha-caixa", "operador")
+            estacionamento.salvar()
+
+            novo_estacionamento = Estacionamento(storage_path=str(caminho))
+            novo_estacionamento.carregar()
+
+            self.assertTrue(novo_estacionamento.autenticar_usuario("caixa", "senha-caixa"))
+            self.assertEqual(novo_estacionamento.obter_perfil_usuario("caixa"), "operador")
+
 
 if __name__ == "__main__":
     unittest.main()
